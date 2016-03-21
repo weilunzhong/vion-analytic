@@ -22,7 +22,7 @@ def validate_document(usr_document):
     else:
         return False
 
-def populate_database(source_file):
+def populate_mongo(source_file):
     with open(source_file, "rb") as csvfile:
         spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
         for idx, line in enumerate(spamreader):
@@ -54,6 +54,7 @@ def populate_elastic(source_file):
                     raise RuntimeError("csv file has empty field and is not parsed properly")
                 res = {dict_keys[i] :line[i] for i in range(0,18)}
                 res["Playtime"] = parse_time(res["Playtime"])
+                res["date"] = res["Stream started"].split(' ')[0]
                 validation = validate_document(res)
                 if validation:
                     indexer = es.index(index="user_data", doc_type="cmore",
@@ -62,10 +63,10 @@ def populate_elastic(source_file):
                     continue
             print idx
 
-def flush_db_collection(db_collection):
+def flush_mongo_collection(db_collection):
     db_collection.remove({})
     print db_collection.count()
 
 if __name__ == "__main__":
     populate_elastic("usr_data/streamcounts_20150101-20150201.csv")
-    # flush_db_collection(collection)
+    # flush_mongo_collection(collection)
